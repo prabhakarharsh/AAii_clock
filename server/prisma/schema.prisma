@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Alarm {
@@ -21,7 +21,7 @@ model Alarm {
 }
 
 model Reminder {
-  id        String   @id @default(cuid())
+  id        String   @id @default(now())
   title     String
   note      String?
   datetime  DateTime
@@ -30,21 +30,20 @@ model Reminder {
 }
 
 model Routine {
-  id        String          @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
-  active    Boolean         @default(true)
-  createdAt DateTime        @default(now())
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
   steps     RoutineStep[]
 }
 
 model RoutineStep {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   routineId String
   order     Int
   type      String
   label     String
   time      String?
   note      String?
-  routine   Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
 }
-
