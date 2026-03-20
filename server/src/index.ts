@@ -17,17 +17,25 @@ const PORT = process.env.PORT || 3001;
 // Middlewares
 app.use(morgan('dev'));
 app.use(cors({
-  origin: [
-    'http://localhost:5174',
-    'https://a-aii-clock.vercel.app',
-    'https://a-aii-clock-6x5h7w3q9-harsh8.vercel.app',
-    /\.vercel\.app$/
-  ],
+  origin: function (origin, callback) {
+    // Allow all vercel URLs and localhost
+    if (!origin) return callback(null, true)
+    if (
+      origin.includes('vercel.app') ||
+      origin.includes('localhost') ||
+      origin.includes('railway.app')
+    ) {
+      return callback(null, true)
+    }
+    return callback(null, true)
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
+// Handle preflight requests
+app.options('*', cors())
 app.use(express.json());
 
 // Routes
