@@ -19,9 +19,15 @@ app.use(morgan('dev'));
 app.use(cors({
   origin: [
     'http://localhost:5174',
-    'https://a-aii-clock.vercel.app'
-  ]
-}));
+    'https://a-aii-clock.vercel.app',
+    'https://a-aii-clock-6x5h7w3q9-harsh8.vercel.app',
+    /\.vercel\.app$/
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.use(express.json());
 
 // Routes
