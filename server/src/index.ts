@@ -16,7 +16,12 @@ const PORT = process.env.PORT || 3001;
 
 // Middlewares
 app.use(morgan('dev'));
-app.use(cors({ origin: 'http://localhost:5174' }));
+app.use(cors({
+  origin: [
+    'http://localhost:5174',
+    'https://a-aii-clock.vercel.app'
+  ]
+}));
 app.use(express.json());
 
 // Routes
@@ -30,7 +35,7 @@ app.get('/health', async (req: Request, res: Response) => {
   try {
     // DB connection test
     await (prisma as any).$queryRaw`SELECT 1`;
-    
+
     res.json({
       status: 'ok',
       database: 'connected',
@@ -43,7 +48,7 @@ app.get('/health', async (req: Request, res: Response) => {
       version: '1.0.0'
     });
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       database: 'disconnected',
       error: error instanceof Error ? error.message : 'Unknown error'
