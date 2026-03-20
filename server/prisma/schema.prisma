@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Alarm {
+  id           String   @id @default(cuid())
+  label        String
+  time         String
+  active       Boolean  @default(true)
+  repeat       String   @default("once")
+  ringtoneName String   @default("Default")
+  createdAt    DateTime @default(now())
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  title     String
+  note      String?
+  datetime  DateTime
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Routine {
+  id        String          @id @default(cuid())
+  name      String
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  steps     RoutineStep[]
+}
+
+model RoutineStep {
+  id        String   @id @default(cuid())
+  routineId String
+  order     Int
+  type      String
+  label     String
+  time      String?
+  note      String?
+  routine   Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+}
+
