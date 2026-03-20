@@ -1,0 +1,1 @@
+import{t as e}from"./index-3NxdrFhj.js";var t={extractTask:t=>e(`/ai/extract`,`POST`,{text:t}),extractRoadmapFromFile:t=>e(`/ai/extract-file`,`POST`,t),extractAndSave:t=>e(`/ai/extract-and-save`,`POST`,{text:t})};export{t as aiService};

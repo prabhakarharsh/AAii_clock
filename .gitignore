@@ -1,0 +1,32 @@
+node_modules
+dist
+.env
+*.db
+*.db-journal
+prisma/migrations/*.db
+
+
+# Dependencies
+node_modules
+frontend/node_modules
+server/node_modules
+
+# Build output
+dist
+frontend/dist
+server/dist
+
+# Environment variables
+.env
+frontend/.env
+server/.env
+frontend/.env.production
+
+# Database
+*.db
+*.db-journal
+server/prisma/*.db
+
+# System files
+.DS_Store
+*.log

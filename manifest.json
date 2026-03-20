@@ -1,0 +1,20 @@
+{
+  "name": "ARC Clock — Terminal Edition",
+  "short_name": "ARC Clock",
+  "description": "Smart AI alarm clock for CSE students",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
