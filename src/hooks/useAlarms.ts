@@ -28,8 +28,10 @@ export function useAlarms() {
     try {
       await alarmService.createAlarm(data);
       await fetchAlarms();
+      return true;
     } catch (err: any) {
       setError(err.message);
+      throw err;
     }
   };
 

@@ -17,6 +17,8 @@ export function useReminders() {
         const parsed = JSON.parse(r.note);
         description = parsed.description || '';
         milestones = parsed.milestones || [];
+        (r as any).attachmentName = parsed.attachmentName || undefined;
+        (r as any).attachmentContent = parsed.attachmentContent || undefined;
       } catch {
         description = r.note;
       }
@@ -30,7 +32,9 @@ export function useReminders() {
       description,
       milestones,
       createdAt: new Date(r.createdAt || Date.now()).getTime(),
-      done: r.done
+      done: r.done,
+      attachmentName: (r as any).attachmentName,
+      attachmentContent: (r as any).attachmentContent
     } as any; // Cast because our local Task type is defined slightly differently
   };
 
@@ -63,7 +67,9 @@ export function useReminders() {
           title: data.title,
           note: JSON.stringify({
             description: data.description,
-            milestones: data.milestones
+            milestones: data.milestones,
+            attachmentName: (data as any).attachmentName,
+            attachmentContent: (data as any).attachmentContent
           }),
           datetime: new Date().toISOString(),
           done: false
@@ -89,7 +95,9 @@ export function useReminders() {
         title: updated.title,
         note: JSON.stringify({
           description: updated.description,
-          milestones: updated.milestones
+          milestones: updated.milestones,
+          attachmentName: updated.attachmentName,
+          attachmentContent: updated.attachmentContent
         }),
         done: updated.milestones.length > 0 ? updated.milestones.every(m => m.done) : existing.done
       };

@@ -249,15 +249,24 @@ export function AlarmsTab({
 }: any) {
   const [form, setForm] = useState<any>({ time: '', hours: '', minutes: '', ampm: 'AM', label: '', repeat: 'once', ringtoneName: null, ringtoneData: null });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const addAlarm = async () => {
     let finalTime = '';
+    setError('');
+    setSuccess('');
+
     if (clockFmt === '12h') {
-      if (!form.hours || !form.minutes) { setError('// enter time'); return; }
+      if (!form.hours || !form.minutes) { setError('// enter time (HH:MM)'); return; }
       finalTime = to24h(form.hours, form.minutes, form.ampm);
     } else {
       if (!form.time) { setError('// enter time'); return; }
       finalTime = form.time;
+    }
+
+    if (!form.label.trim()) {
+      setError('// enter label');
+      return;
     }
     
     try {
@@ -270,7 +279,8 @@ export function AlarmsTab({
         ringtoneData: form.ringtoneData
       });
       setForm({ time: '', hours: '', minutes: '', ampm: 'AM', label: '', repeat: 'once', ringtoneName: null, ringtoneData: null });
-      setError('');
+      setSuccess('// SUCCESS: ALARM_CREATED');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(`// error: ${err.message}`);
     }
@@ -350,7 +360,8 @@ export function AlarmsTab({
         </div>
 
         <div style={{ color: C.text, fontSize: '0.8rem', margin: '1rem 0' }}>)</div>
-        {error && <div style={{ color: C.red, fontSize: '0.7rem', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div style={{ color: C.red, fontSize: '0.7rem', marginBottom: '1rem', background: C.red + '15', padding: '0.5rem', borderRadius: 4 }}>{error}</div>}
+        {success && <div style={{ color: C.green, fontSize: '0.7rem', marginBottom: '1rem', background: C.green + '15', padding: '0.5rem', borderRadius: 4 }}>{success}</div>}
         <button onClick={addAlarm} style={{ width: '100%', background: 'transparent', border: `1px solid ${C.blue}`, borderRadius: 7, padding: '0.8rem', color: C.blue, fontWeight: 600, cursor: 'pointer', letterSpacing: '0.1em' }}>$ add_alarm --time "{form.hours || '...'}:{form.minutes || '...'}"</button>
       </div>
 

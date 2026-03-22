@@ -62,12 +62,32 @@ export function TasksTab({
     setShowForm(true);
   };
 
-  const handleScanFile = async (files: FileList | null) => {
+  const handleScanFile = async (files: FileList | null, taskId?: string) => {
     if (!files || !files.length) return;
     const file = files[0];
     if (!file) return;
 
-    // show form immediately with loading state
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`// error: file too large (${(file.size / 1024 / 1024).toFixed(2)}MB). max 5MB.`);
+      return;
+    }
+
+    if (taskId) {
+      const r = new FileReader();
+      r.onload = async (ev) => {
+        const content = ev.target?.result as string;
+        if (updateTask) {
+          await updateTask(taskId, {
+            attachmentName: file.name,
+            attachmentContent: content
+          });
+        }
+      };
+      r.readAsDataURL(file);
+      return;
+    }
+
+    // show form immediately with loading state (for new tasks)
     setShowForm(true);
     setScanning(true);
     setScanFile({
@@ -107,6 +127,8 @@ export function TasksTab({
         type: file.type || 'text/plain',
         content: `data:${file.type || 'text/plain'};base64,${base64}`,
       });
+      
+      setScanFile((prev: any) => ({ ...prev, content: `data:${file.type || 'text/plain'};base64,${base64}` }));
 
       if (!res.success || !res.extracted) {
         setScanLog('// warning: no milestones extracted — try a different file');
@@ -155,7 +177,9 @@ export function TasksTab({
       title,
       description: desc,
       milestones: ms,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      attachmentName: scanFile?.name,
+      attachmentContent: scanFile?.content
     };
 
     await addReminder(newTask);
@@ -285,7 +309,7 @@ export function TasksTab({
           <input
             id="task-scan-input-v2"
             type="file"
-            accept="image/*,.pdf,.txt,.md,.py,.js,.ts,.cpp,.c,.java,.json,.csv,.html,.css,.xlsx,.docx"
+            accept="image/*,.pdf,.txt,.md,.py,.js,.ts,.cpp,.c,.java,.json,.csv,.html,.css,.xlsx,.docx,.doc"
             style={{
               position:      'absolute',
               width:         1,
@@ -443,7 +467,7 @@ export function TasksTab({
                     <input
                       id="task-rescan-input-v2"
                       type="file"
-                      accept="image/*,.pdf,.txt,.md,.py,.js,.ts,.cpp,.c,.java,.json,.csv,.html,.css,.xlsx,.docx"
+                      accept="image/*,.pdf,.txt,.md,.py,.js,.ts,.cpp,.c,.java,.json,.csv,.html,.css,.xlsx,.docx,.doc"
                       style={{
                         position:      'absolute',
                         width:         1,
@@ -622,15 +646,30 @@ export function TasksTab({
                       — {task.description}
                     </div>
                   )}
+                  {task.attachmentName && (
+                    <div style={{
+                      color:        C.purple,
+                      fontSize:     '0.58rem',
+                      marginTop:    '0.15rem',
+                      overflow:     'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace:   'nowrap',
+                      maxWidth:     '70%',
+                      fontFamily:   "'JetBrains Mono', monospace",
+                    }}>
+                      📎 {task.attachmentName}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <label htmlFor={`task-attach-${task.id}`} style={{ cursor: 'pointer', color: 'var(--cyan)', fontSize: '11px' }}>
-                    📎 attach
+                    📎 {task.attachmentName ? 're-attach' : 'attach'}
                     <input 
                       type="file" 
                       id={`task-attach-${task.id}`} 
+                      accept="image/*,.pdf,.txt,.md,.py,.js,.ts,.cpp,.c,.java,.json,.csv,.html,.css,.xlsx,.docx,.doc"
                       style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} 
-                      onChange={e => handleScanFile(e.target.files)}
+                      onChange={e => handleScanFile(e.target.files, task.id)}
                     />
                   </label>
                   <button 

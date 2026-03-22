@@ -22,6 +22,8 @@ export type Task = {
   milestones: Milestone[]
   createdAt: number
   done?: boolean
+  attachmentName?: string
+  attachmentContent?: string
 }
 
 export type Reminder = {
