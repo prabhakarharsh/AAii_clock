@@ -373,13 +373,13 @@ function App() {
               removeReminder={removeReminder}
               loading={remindersLoading}
               error={remindersError}
-              onAddAlarm={(a: any) => addAlarm(a)}
+              onAddAlarm={async (a: any) => { await addAlarm(a); }}
             />
           )}
           {activeTab === 'voice' && (
             <VoiceRoutineTab
               alarms={alarms}
-              addAlarm={addAlarm}
+              addAlarm={async (a: any) => { await addAlarm(a); }}
               removeAlarm={removeAlarm}
               tasks={tasks as any}
               addReminder={addReminder}
@@ -392,7 +392,7 @@ function App() {
           {activeTab === 'ai' && (
             <AITab
               alarms={alarms}
-              addAlarm={addAlarm}
+              addAlarm={async (a: any) => { await addAlarm(a); }}
               tasks={tasks as any}
               addReminder={addReminder}
               markDone={markDone}
