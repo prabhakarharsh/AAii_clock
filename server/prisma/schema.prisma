@@ -21,7 +21,7 @@ model Alarm {
 }
 
 model Reminder {
-  id  String  @id @default(cuid())
+  id        String   @id @default(cuid())
   title     String
   note      String?
   datetime  DateTime
