@@ -1,57 +1,92 @@
-import { useState, useEffect } from 'react';
-import { alarmService } from '../services/alarmService';
-import type { Alarm } from '../types';
+import { useState, useEffect } from 'react'
+import type { Alarm } from '../types'
+import { 
+  getAllAlarms, 
+  createAlarm, 
+  updateAlarm, 
+  deleteAlarm 
+} from '../services/alarmService'
 
 export function useAlarms() {
-  const [alarms, setAlarms] = useState<Alarm[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [alarms, setAlarms] = 
+    useState<Alarm[]>([])
+  const [loading, setLoading] = 
+    useState(true)
+  const [error, setError] = 
+    useState<string | null>(null)
 
   const fetchAlarms = async () => {
     try {
-      setLoading(true);
-      const res = await alarmService.getAllAlarms();
-      setAlarms(res.data);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
+      setLoading(true)
+      setError(null)
+      const data = await getAllAlarms()
+      setAlarms(data)
+    } catch (err) {
+      setError(
+        err instanceof Error ? 
+        err.message : 
+        'Failed to fetch alarms'
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchAlarms();
-  }, []);
+    fetchAlarms()
+  }, [])
 
-  const addAlarm = async (data: Partial<Alarm>) => {
+  const addAlarm = async (
+    alarm: Partial<Alarm>
+  ) => {
     try {
-      await alarmService.createAlarm(data);
-      await fetchAlarms();
-      return true;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
+      await createAlarm(alarm)
+      await fetchAlarms()
+    } catch (err) {
+      setError(
+        err instanceof Error ? 
+        err.message : 
+        'Failed to create alarm'
+      )
     }
-  };
+  }
 
-  const toggleAlarm = async (id: string, active: boolean) => {
+  const toggleAlarm = async (
+    id: string, 
+    active: boolean
+  ) => {
     try {
-      await alarmService.updateAlarm(id, { active });
-      await fetchAlarms();
-    } catch (err: any) {
-      setError(err.message);
+      await updateAlarm(id, { active })
+      await fetchAlarms()
+    } catch (err) {
+      setError(
+        err instanceof Error ? 
+        err.message : 
+        'Failed to update alarm'
+      )
     }
-  };
+  }
 
   const removeAlarm = async (id: string) => {
     try {
-      await alarmService.deleteAlarm(id);
-      await fetchAlarms();
-    } catch (err: any) {
-      setError(err.message);
+      await deleteAlarm(id)
+      await fetchAlarms()
+    } catch (err) {
+      setError(
+        err instanceof Error ? 
+        err.message : 
+        'Failed to delete alarm'
+      )
     }
-  };
+  }
 
-  return { alarms, loading, error, addAlarm, toggleAlarm, removeAlarm, refresh: fetchAlarms };
+  return {
+    alarms,
+    loading,
+    error,
+    addAlarm,
+    toggleAlarm,
+    removeAlarm,
+    refreshAlarms: fetchAlarms
+  }
 }

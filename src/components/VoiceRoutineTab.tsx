@@ -131,6 +131,7 @@ export function VoiceRoutineTab({
 
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [tempRoutine, setTempRoutine] = useState<any | null>(null);
+  const [fileContent, setFileContent] = useState<string>('');
 
 
   // Initialize recognition ONCE
@@ -635,43 +636,54 @@ export function VoiceRoutineTab({
 
     setIsScrubbing(true);
     const reader = new FileReader();
-    const content = await new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string);
-      if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-        reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
-      }
-    });
-
-    try {
-      const { generateRoadmapFromFile } = await import('../services/ai');
-      const payload = {
-        name: file.name,
-        type: file.type || 'text/plain',
-        content: content.startsWith('data:') ? content : `data:text/plain;base64,${btoa(content)}`
-      };
-
-      const parsed = await generateRoadmapFromFile(payload);
+    reader.onload = async (ev) => {
+      const content = ev.target?.result as string;
+      setFileContent(content);
       
-      const newRoutine = {
-        name: parsed.title || file.name,
-        steps: (parsed.milestones || []).map((m: any, i: number) => ({
-          id: 'step_' + i,
-          order: i,
-          type: 'task',
-          label: m,
-          time: '08:00' // Default time for routine steps
-        }))
-      };
+      try {
+        const { aiService } = await import('../services/aiService');
+        const res = await aiService.extractTask(content);
+        
+        if (res.success && res.extracted) {
+          const extracted = res.extracted;
+          // Show extracted tasks by creating a routine from the result
+          // If the AI returns steps/milestones, use them, otherwise use the note or label
+          const newRoutine = {
+            name: file.name,
+            steps: [] as any[]
+          };
 
-      setTempRoutine(newRoutine);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to parse routine");
-    } finally {
-      setIsScrubbing(false);
-    }
+          if (extracted.steps) {
+            newRoutine.steps = extracted.steps.map((s: any, i: number) => ({
+              id: 'step_' + i,
+              label: s.label || s.text,
+              time: s.time || '08:00'
+            }));
+          } else if (extracted.note) {
+            // Split note into lines as milestones if it's multiple lines
+            newRoutine.steps = extracted.note.split('\n').filter(Boolean).map((line: string, i: number) => ({
+              id: 'step_' + i,
+              label: line.trim(),
+              time: extracted.time || '08:00'
+            }));
+          } else {
+            newRoutine.steps = [{
+              id: 'step_0',
+              label: extracted.label || 'Extracted Task',
+              time: extracted.time || '08:00'
+            }];
+          }
+
+          setTempRoutine(newRoutine);
+        }
+      } catch (err) {
+        console.error('File scan error:', err);
+        alert("Failed to scan file");
+      } finally {
+        setIsScrubbing(false);
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -828,6 +840,11 @@ export function VoiceRoutineTab({
           </div>
 
           <div style={{ marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            {fileContent && (
+              <div className="syntax-comment" style={{ fontSize: '10px', marginBottom: '8px', opacity: 0.6 }}>
+                // LAST_LOADED_FILE: {fileContent.length} bytes processed
+              </div>
+            )}
             <div className="syntax-dim" style={{ fontSize: '11px', marginBottom: '10px' }}>COMMAND_HISTORY (tail -n 3)</div>
             {voiceState.transcriptHistory.slice(0, 3).map((t: any, i: number) => (
               <div key={i} style={{ fontSize: '13px', marginBottom: '6px' }}>
@@ -860,7 +877,7 @@ export function VoiceRoutineTab({
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>📁</div>
               <div style={{ fontSize: '14px', color: 'var(--yellow)' }}>Upload Schedule</div>
               <div className="syntax-comment" style={{ fontSize: '11px', marginTop: '4px' }}>PDF, IMAGE, TXT</div>
-              <input type="file" id="routine-upload" style={{ display: 'none' }} onChange={handleRoutineUpload} />
+              <input type="file" id="routine-upload" style={{ display: 'none' }} accept=".txt,.pdf,.md,.doc,.docx" onChange={handleRoutineUpload} />
             </label>
           )}
 

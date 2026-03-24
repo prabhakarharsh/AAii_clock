@@ -1,10 +1,37 @@
-import { apiCall } from './api';
-import type { Alarm } from '../types';
+import { apiCall } from './api'
+import type { Alarm } from '../types'
 
-export const alarmService = {
-  getAllAlarms: () => apiCall('/alarms'),
-  getAlarm: (id: string) => apiCall(`/alarms/${id}`),
-  createAlarm: (data: Partial<Alarm>) => apiCall('/alarms', 'POST', data),
-  updateAlarm: (id: string, data: Partial<Alarm>) => apiCall(`/alarms/${id}`, 'PUT', data),
-  deleteAlarm: (id: string) => apiCall(`/alarms/${id}`, 'DELETE'),
-};
+export async function getAllAlarms(): 
+  Promise<Alarm[]> {
+  const data = await apiCall('/alarms')
+  return data.data
+}
+
+export async function createAlarm(
+  alarm: Partial<Alarm>
+): Promise<Alarm> {
+  const data = await apiCall(
+    '/alarms', 
+    'POST', 
+    alarm
+  )
+  return data.data
+}
+
+export async function updateAlarm(
+  id: string,
+  alarm: Partial<Alarm>
+): Promise<Alarm> {
+  const data = await apiCall(
+    `/alarms/${id}`, 
+    'PUT', 
+    alarm
+  )
+  return data.data
+}
+
+export async function deleteAlarm(
+  id: string
+): Promise<void> {
+  await apiCall(`/alarms/${id}`, 'DELETE')
+}
