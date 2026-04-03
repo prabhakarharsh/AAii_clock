@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Alarm {
@@ -43,4 +44,13 @@ model RoutineStep {
   time      String?
   note      String?
   routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+}
+
+model FileScan {
+  id            String   @id @default(cuid())
+  fileName      String
+  fileType      String?
+  content       String?
+  extractedData String?  // Store JSON as string for simplicity or use Json type
+  createdAt     DateTime @default(now())
 }

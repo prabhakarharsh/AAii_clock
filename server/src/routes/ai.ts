@@ -20,8 +20,8 @@ router.post('/ai/extract', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/ai/extract-file → Preview only (file)
-router.post('/ai/extract-file', async (req: Request, res: Response) => {
+// POST /api/ai/extract-file → Preview and Save
+router.post('/api/ai/extract-file', async (req: Request, res: Response) => {
   try {
     const { name, type, content } = req.body;
     if (!content) {
@@ -30,7 +30,33 @@ router.post('/ai/extract-file', async (req: Request, res: Response) => {
     }
 
     const result = await extractRoadmapFromFile({ name, type, content });
-    res.json({ success: true, extracted: result });
+    
+    // Save the raw scan data to history
+    const savedScan = await (prisma as any).fileScan.create({
+      data: {
+        fileName: name || 'unnamed_file',
+        fileType: type || 'text/plain',
+        content: content.length > 5000 ? content.substring(0, 5000) + '...' : content,
+        extractedData: JSON.stringify(result)
+      }
+    });
+
+    // Also store the result in the Reminder table as requested
+    const savedReminder = await (prisma as any).reminder.create({
+      data: {
+        title: result.title || `Scan: ${name}`,
+        note: result.description || (result.milestones ? result.milestones.join('\n') : ''),
+        datetime: new Date(), // Set current time for now
+        done: false
+      }
+    });
+
+    res.json({ 
+      success: true, 
+      extracted: result,
+      savedScanId: savedScan.id,
+      savedReminderId: savedReminder.id
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
