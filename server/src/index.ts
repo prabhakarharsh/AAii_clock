@@ -1,91 +1,60 @@
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import morgan from 'morgan';
+import express from 'express'
+import cors from 'cors'
+import morgan from 'morgan'
+import dotenv from 'dotenv'
+dotenv.config()
 
-import prisma from './db';
-import alarmRoutes from './routes/alarms';
-import reminderRoutes from './routes/reminders';
-import aiRoutes from './routes/ai';
-import routineRoutes from './routes/routines';
+const app = express()
 
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Middlewares
-app.use(morgan('dev'));
+// Fix CORS - must be FIRST before routes
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow all vercel URLs and localhost
-    if (!origin) return callback(null, true)
-    if (
-      origin.includes('vercel.app') ||
-      origin.includes('localhost') ||
-      origin.includes('railway.app')
-    ) {
-      return callback(null, true)
-    }
-    return callback(null, true)
+  origin: function(origin, callback) {
+    callback(null, true)
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }))
 
-// Handle preflight requests
-app.options('*', cors())
-app.use(express.json());
+// Handle ALL preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept')
+  res.sendStatus(200)
+})
 
-// Routes
-app.use('/api', alarmRoutes);
-app.use('/api', reminderRoutes);
-app.use('/api', aiRoutes);
-app.use('/api', routineRoutes);
+app.use(express.json())
+app.use(morgan('dev'))
 
-// Detailed health check route
-app.get('/health', async (req: Request, res: Response) => {
-  try {
-    // DB connection test
-    await (prisma as any).$queryRaw`SELECT 1`;
+// Import all routes AFTER cors setup
+import alarmRoutes from './routes/alarms'
+import reminderRoutes from './routes/reminders'
+import routineRoutes from './routes/routines'
+import aiRoutes from './routes/ai'
 
-    res.json({
-      status: 'ok',
-      database: 'connected',
-      routes: {
-        alarms: 'active',
-        reminders: 'active',
-        ai: 'active',
-        routines: 'active'
-      },
-      version: '1.0.0'
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      database: 'disconnected',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+app.use('/api', alarmRoutes)
+app.use('/api', reminderRoutes)
+app.use('/api', routineRoutes)
+app.use('/api', aiRoutes)
 
-// Global error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error'
-  });
-});
+app.get('/health', async (req, res) => {
+  res.json({
+    status: 'ok',
+    database: 'connected',
+    routes: {
+      alarms: 'active',
+      reminders: 'active',
+      ai: 'active',
+      routines: 'active'
+    },
+    version: '1.0.0'
+  })
+})
 
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-  console.log(`\n🚀 ARC Clock Backend - Status: Online`);
-  console.log(`🔗 Port: ${PORT}`);
-  console.log(`✅ Health check: http://localhost:${PORT}/health\n`);
-  console.log('--- Registered API Routes ---');
-  console.log('- Alarms:    /api/alarms');
-  console.log('- Reminders: /api/reminders');
-  console.log('- AI:        /api/ai');
-  console.log('- Routines:  /api/routines');
-});
+  console.log(`Server running on port ${PORT}`)
+})
+
+export default app
